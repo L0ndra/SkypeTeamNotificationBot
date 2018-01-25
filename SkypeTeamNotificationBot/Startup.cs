@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -31,7 +32,21 @@ namespace SkypeTeamNotificationBot
         {
             services.AddSingleton(_ => Configuration);
 
-            // Add framework services.
+            var credentialProvider = new StaticCredentialProvider(Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppIdKey)?.Value,
+                Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppPasswordKey)?.Value);
+
+            services.AddAuthentication(
+                    // This can be removed after https://github.com/aspnet/IISIntegration/issues/371
+                    options =>
+                    {
+                        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    }
+                )
+                .AddBotAuthentication(credentialProvider);
+
+            services.AddSingleton(typeof(ICredentialProvider), credentialProvider);
+
             services.AddMvc(options =>
             {
                 options.Filters.Add(typeof(TrustServiceUrlAttribute));
@@ -46,9 +61,7 @@ namespace SkypeTeamNotificationBot
 
             app.UseStaticFiles();
 
-            app.UseBotAuthentication(new StaticCredentialProvider(
-                Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppIdKey)?.Value,
-                Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppPasswordKey)?.Value));
+            app.UseAuthentication();
 
             app.UseMvc();
         }
