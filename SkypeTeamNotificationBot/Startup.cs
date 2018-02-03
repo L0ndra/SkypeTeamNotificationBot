@@ -10,6 +10,7 @@ using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SkypeTeamNotificationBot.DataAccess;
 
 namespace SkypeTeamNotificationBot
 {
@@ -51,6 +52,8 @@ namespace SkypeTeamNotificationBot
             {
                 options.Filters.Add(typeof(TrustServiceUrlAttribute));
             });
+
+            services.AddSingleton(new UsersDal(Configuration["Mongodb"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
