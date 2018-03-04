@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
 using MongoDB.Bson;
@@ -23,17 +24,48 @@ namespace SkypeTeamNotificationBot.DataAccess
 
         public async Task<IEnumerable<UserModel>> GetUsersAsync()
         {
-            return await _colection.Find(new BsonDocumentFilterDefinition<DataModels.UserModel>(new BsonDocument())).ToListAsync();
+            try
+            {
+                return await _colection.Find(new BsonDocumentFilterDefinition<DataModels.UserModel>(new BsonDocument()))
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                //todo: add logs and some handlers in caller methods
+                throw;
+            }
         }
 
-        public async Task AddNewUserAsync(UserModel user)
+        public async Task<UserModel> AddNewUserAsync(UserModel user)
         {
-            await _colection.InsertOneAsync(user);
+            try
+            {
+                var users = await _colection.CountAsync(x => x.Role == Role.Admin);
+                if (users == 0)
+                {
+                    user.Role = Role.Admin;
+                }
+                await _colection.InsertOneAsync(user);
+                return user;
+            }
+            catch(Exception ex)
+            {
+                //todo: add logs and some handlers in caller methods
+                throw;
+            }
         }
 
         public async Task<UserModel> GetUserByNameAsync(string name)
         {
-            return await _colection.Find(x => x.Name == name).FirstAsync();
+            try
+            {
+                return await _colection.Find(x => x.Name == name).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                //todo: add logs and some handlers in caller methods
+                throw;
+            }
         }
 
 

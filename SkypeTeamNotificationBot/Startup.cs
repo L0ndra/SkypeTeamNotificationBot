@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +48,17 @@ namespace SkypeTeamNotificationBot
                     }
                 )
                 .AddBotAuthentication(credentialProvider);
+                
+            Conversation.UpdateContainer(
+                builder =>
+                {
+                    var store = new InMemoryDataStore();
+                    builder.Register(c => store)
+                        .Keyed<IBotDataStore<BotData>>(new object())
+                        .AsSelf()
+                        .SingleInstance();
+                    builder.Register(c => new MicrosoftAppCredentials(credentialProvider.AppId, credentialProvider.Password)).SingleInstance();
+                });
 
             services.AddSingleton(typeof(ICredentialProvider), credentialProvider);
 

@@ -16,11 +16,11 @@ namespace SkypeTeamNotificationBot.DataModels
         
         [BsonElement("Name")]
         public string Name { get; set; }
-        
+
         [BsonElement("Role")]
-        public Role Role { get; set; }
+        public Role Role { get; set; } = Role.User;
         
         [BsonElement("Activity")]
-        public Activity Activity { get; set; }
+        public string Activity { get; set; }
     }
 }

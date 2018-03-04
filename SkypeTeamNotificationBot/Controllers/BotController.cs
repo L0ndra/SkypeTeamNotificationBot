@@ -2,10 +2,13 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
 using SkypeTeamNotificationBot.DataAccess;
 using SkypeTeamNotificationBot.DataModels;
+using Newtonsoft.Json;
+using SkypeTeamNotificationBot.Dialogs;
 
 namespace SkypeTeamNotificationBot.Controllers
 {
@@ -20,6 +23,7 @@ namespace SkypeTeamNotificationBot.Controllers
             this._configuration = configuration;
             UserDal = userdal;
         }
+       
 
         [Authorize(Roles = "Bot")]
         // POST api/values
@@ -28,7 +32,7 @@ namespace SkypeTeamNotificationBot.Controllers
         {
             var appCredentials = new MicrosoftAppCredentials(this._configuration);
             var client = new ConnectorClient(new Uri(activity.ServiceUrl), appCredentials);
-                  if (activity.Type == ActivityTypes.Message || activity.Type == ActivityTypes.ConversationUpdate)
+            if (activity.Type == ActivityTypes.Message || activity.Type == ActivityTypes.ContactRelationUpdate)
             {
                 await ExecuteAction(activity, client);
             }
@@ -76,16 +80,32 @@ namespace SkypeTeamNotificationBot.Controllers
                 user = new UserModel()
                 {
                     Name = activity.From.Id,
-                    Activity = activity
+                    Activity = JsonConvert.SerializeObject(activity)
                 };
-                await UserDal.AddNewUserAsync(user);
+                user = await UserDal.AddNewUserAsync(user);
                 var reply = activity.CreateReply();
-                reply.Text = $"Hello, {activity.Recipient.Name}. You will receive first notification soon";
+                if (user.Role == Role.Admin)
+                {
+                    reply.Text = $"Congratulate you admin because you is first user of bot";
+                }
+                else
+                {
+                    reply.Text = $"Hello, {activity.From.Name}. You will receive first notification soon";
+                }
+
                 await client.Conversations.ReplyToActivityAsync(reply);
+                return;
             }
 
             if (user.Role == Role.Admin && activity.Type == ActivityTypes.Message)
             {
+                await Conversation.SendAsync(activity, () => new AdminDialog());
+            }
+            else
+            {
+                var reply = activity.CreateReply();
+                reply.Text = "You haven't admin permissions";
+                await client.Conversations.ReplyToActivityAsync(reply);
             }
 }
 
