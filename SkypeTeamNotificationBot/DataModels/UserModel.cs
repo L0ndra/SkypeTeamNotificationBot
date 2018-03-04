@@ -22,5 +22,8 @@ namespace SkypeTeamNotificationBot.DataModels
         
         [BsonElement("Activity")]
         public string Activity { get; set; }
+        
+        [BsonElement("Block")]
+        public bool Block { get; set; }
     }
 }

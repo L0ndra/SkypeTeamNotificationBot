@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Language.Intermediate;
 using MongoDB.Bson;
@@ -36,7 +37,7 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<UserModel> AddNewUserAsync(UserModel user)
+        public async Task<UserModel> InsertUserAsync(UserModel user)
         {
             try
             {
@@ -55,13 +56,26 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<UserModel> GetUserByNameAsync(string name)
+        public async Task<UserModel> GetUserByIdAsync(ObjectId id)
         {
             try
             {
-                return await _colection.Find(x => x.Name == name).FirstOrDefaultAsync();
+                return await _colection.Find(x => x.Id == id).FirstOrDefaultAsync();
             }
             catch (Exception ex)
+            {
+                //todo: add logs and some handlers in caller methods
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<UserModel>> GetUsersWithSpecificConditionAsync(Expression<Func<UserModel, bool>> condition)
+        {
+            try
+            {
+                return await _colection.Find(condition).ToListAsync();
+            }
+            catch
             {
                 //todo: add logs and some handlers in caller methods
                 throw;

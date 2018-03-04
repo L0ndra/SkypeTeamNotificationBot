@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 using SkypeTeamNotificationBot.DataAccess;
 using SkypeTeamNotificationBot.DataModels;
 using Newtonsoft.Json;
@@ -74,15 +75,16 @@ namespace SkypeTeamNotificationBot.Controllers
 
         private async Task ExecuteAction(Activity activity, ConnectorClient client)
         {
-            var user = await UserDal.GetUserByNameAsync(activity.From.Id);
+            var user = await UserDal.GetUserByIdAsync(ObjectId.Parse(activity.From.Id));
             if (user == null)
             {
                 user = new UserModel()
                 {
-                    Name = activity.From.Id,
+                    Id = new ObjectId(activity.From.Id),
+                    Name = activity.From.Name,
                     Activity = JsonConvert.SerializeObject(activity)
                 };
-                user = await UserDal.AddNewUserAsync(user);
+                user = await UserDal.InsertUserAsync(user);
                 var reply = activity.CreateReply();
                 if (user.Role == Role.Admin)
                 {
@@ -99,7 +101,7 @@ namespace SkypeTeamNotificationBot.Controllers
 
             if (user.Role == Role.Admin && activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new AdminDialog());
+                await Conversation.SendAsync(activity, () => new AdminDialog(UserDal));
             }
             else
             {
