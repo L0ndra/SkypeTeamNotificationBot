@@ -75,7 +75,7 @@ namespace SkypeTeamNotificationBot.Controllers
 
         private async Task ExecuteAction(Activity activity, ConnectorClient client)
         {
-            var user = await UserDal.GetUserByIdAsync(ObjectId.Parse(activity.From.Id));
+            var user = await UserDal.GetUserByIdAsync(new ObjectId(activity.From.Id));
             if (user == null)
             {
                 user = new UserModel()
