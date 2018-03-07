@@ -12,7 +12,7 @@ namespace SkypeTeamNotificationBot.DataModels
 
     public class UserModel
     {
-        public ObjectId Id { get; set; }
+        public string Id { get; set; }
         
         [BsonElement("Name")]
         public string Name { get; set; }

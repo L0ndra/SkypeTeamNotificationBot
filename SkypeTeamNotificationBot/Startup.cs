@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Connector;
@@ -54,9 +55,10 @@ namespace SkypeTeamNotificationBot
                 {
                     var store = new InMemoryDataStore();
                     builder.Register(c => store)
-                        .Keyed<IBotDataStore<BotData>>(new object())
+                        .Keyed<IBotDataStore<BotData>>(AzureModule.Key_DataStore)
                         .AsSelf()
                         .SingleInstance();
+
                     builder.Register(c => new MicrosoftAppCredentials(credentialProvider.AppId, credentialProvider.Password)).SingleInstance();
                 });
 

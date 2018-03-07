@@ -75,12 +75,13 @@ namespace SkypeTeamNotificationBot.Controllers
 
         private async Task ExecuteAction(Activity activity, ConnectorClient client)
         {
-            var user = await UserDal.GetUserByIdAsync(new ObjectId(activity.From.Id));
+            var user = await UserDal.GetUserByIdAsync(activity.From.Id);
+
             if (user == null)
             {
                 user = new UserModel()
                 {
-                    Id = new ObjectId(activity.From.Id),
+                    Id = activity.From.Id,
                     Name = activity.From.Name,
                     Activity = JsonConvert.SerializeObject(activity)
                 };
@@ -101,7 +102,7 @@ namespace SkypeTeamNotificationBot.Controllers
 
             if (user.Role == Role.Admin && activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new AdminDialog(UserDal));
+                await Conversation.SendAsync(activity, () => new AdminDialog(UserDal).DefaultIfException());
             }
             else
             {
@@ -109,7 +110,8 @@ namespace SkypeTeamNotificationBot.Controllers
                 reply.Text = "You haven't admin permissions";
                 await client.Conversations.ReplyToActivityAsync(reply);
             }
-}
+
+        }
 
     }
 }

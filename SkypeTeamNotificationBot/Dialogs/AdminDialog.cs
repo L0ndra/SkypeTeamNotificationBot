@@ -31,10 +31,10 @@ namespace SkypeTeamNotificationBot.Dialogs
                     v => v.GetAttributeValue<DescriptionAttribute, string>(x => x.Description));
             }, LazyThreadSafetyMode.PublicationOnly);
         
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
+            await context.PostAsync("Welcome, what you want to do?");
             PromptDialog.Choice(context, HandleMainDialogAsync, AdminOptionsDescriptions.Value.Keys, "Choice action", descriptions: AdminOptionsDescriptions.Value.Values);
-            return Task.CompletedTask;
         }
 
         private async Task HandleMainDialogAsync(IDialogContext context, IAwaitable<AdminOptions> option)
@@ -67,7 +67,7 @@ namespace SkypeTeamNotificationBot.Dialogs
         {
             var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<ObjectId> userId) =>
+            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
                     var id = await userId;
                     var user = users.FirstOrDefault(x => x.Id == id);
@@ -107,7 +107,7 @@ namespace SkypeTeamNotificationBot.Dialogs
         {
             var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin);
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<ObjectId> userId) =>
+            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
                     var id = await userId;
                     var user = users.FirstOrDefault(x => x.Id == id);
@@ -132,7 +132,7 @@ namespace SkypeTeamNotificationBot.Dialogs
         {
             var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<ObjectId> userId) =>
+            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
                     var id = await userId;
                     var user = users.FirstOrDefault(x => x.Id == id);
@@ -157,7 +157,7 @@ namespace SkypeTeamNotificationBot.Dialogs
         {
             var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<ObjectId> userId) =>
+            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
                     var id = await userId;
                     var user = users.FirstOrDefault(x => x.Id == id);

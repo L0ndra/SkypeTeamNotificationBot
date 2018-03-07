@@ -56,7 +56,7 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<UserModel> GetUserByIdAsync(ObjectId id)
+        public async Task<UserModel> GetUserByIdAsync(string id)
         {
             try
             {
