@@ -17,12 +17,10 @@ namespace SkypeTeamNotificationBot.Controllers
     public class BotController : Controller
     {
         private readonly IConfigurationRoot _configuration;
-        private readonly UsersDal UserDal;
 
-        public BotController(IConfigurationRoot configuration, UsersDal userdal)
+        public BotController(IConfigurationRoot configuration)
         {
             this._configuration = configuration;
-            UserDal = userdal;
         }
        
 
@@ -75,7 +73,7 @@ namespace SkypeTeamNotificationBot.Controllers
 
         private async Task ExecuteAction(Activity activity, ConnectorClient client)
         {
-            var user = await UserDal.GetUserByIdAsync(activity.From.Id);
+            var user = await UsersDal.GetUserByIdAsync(activity.From.Id);
 
             if (user == null)
             {
@@ -85,7 +83,7 @@ namespace SkypeTeamNotificationBot.Controllers
                     Name = activity.From.Name,
                     Activity = JsonConvert.SerializeObject(activity)
                 };
-                user = await UserDal.InsertUserAsync(user);
+                user = await UsersDal.InsertUserAsync(user);
                 var reply = activity.CreateReply();
                 if (user.Role == Role.Admin)
                 {
@@ -102,7 +100,7 @@ namespace SkypeTeamNotificationBot.Controllers
 
             if (user.Role == Role.Admin && activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new AdminDialog(UserDal).DefaultIfException());
+                await Conversation.SendAsync(activity, () => new AdminDialog().DefaultIfException());
             }
             else
             {

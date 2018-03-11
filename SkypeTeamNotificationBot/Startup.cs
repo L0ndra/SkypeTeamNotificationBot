@@ -69,7 +69,7 @@ namespace SkypeTeamNotificationBot
                 options.Filters.Add(typeof(TrustServiceUrlAttribute));
             });
 
-            services.AddSingleton(new UsersDal(Configuration["Mongodb"]));
+            UsersDal.Initialize(Configuration["Mongodb"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -10,20 +10,20 @@ using SkypeTeamNotificationBot.DataModels;
 
 namespace SkypeTeamNotificationBot.DataAccess
 {
-    public class UsersDal
+    public static class UsersDal
     {
-        private MongoClient _client;
-        private IMongoDatabase _db;
-        private IMongoCollection<UserModel> _colection;
+        private static MongoClient _client;
+        private static IMongoDatabase _db;
+        private static IMongoCollection<UserModel> _colection;
 
-        public UsersDal(string conectionString)
+        public static void Initialize(string conectionString)
         {
             _client = new MongoClient(conectionString);
             _db = _client.GetDatabase("DevelopexBotDb");
             _colection = _db.GetCollection<UserModel>("Users");
         }
 
-        public async Task<IEnumerable<UserModel>> GetUsersAsync()
+        public static async Task<IEnumerable<UserModel>> GetUsersAsync()
         {
             try
             {
@@ -37,7 +37,7 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<UserModel> InsertUserAsync(UserModel user)
+        public static async Task<UserModel> InsertUserAsync(UserModel user)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<UserModel> GetUserByIdAsync(string id)
+        public static async Task<UserModel> GetUserByIdAsync(string id)
         {
             try
             {
@@ -69,7 +69,7 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
-        public async Task<IEnumerable<UserModel>> GetUsersWithSpecificConditionAsync(Expression<Func<UserModel, bool>> condition)
+        public static async Task<IEnumerable<UserModel>> GetUsersWithSpecificConditionAsync(Expression<Func<UserModel, bool>> condition)
         {
             try
             {

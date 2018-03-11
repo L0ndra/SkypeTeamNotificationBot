@@ -16,25 +16,19 @@ using SkypeTeamNotificationBot.Utils;
 
 namespace SkypeTeamNotificationBot.Dialogs
 {
+    [Serializable]
     public class AdminDialog : IDialog<object>
     {
-        private UsersDal _usersDal;
-        public AdminDialog(UsersDal dal)
+        private IDictionary<AdminOptions, string> AdminOptionsDescriptions()
         {
-            _usersDal = dal;
+            return Enum.GetValues(typeof(AdminOptions)).Cast<AdminOptions>().ToDictionary(k => k,
+                v => v.GetAttributeValue<DescriptionAttribute, string>(x => x.Description));
         }
-        
-        private static readonly Lazy<IReadOnlyDictionary<AdminOptions, string>> AdminOptionsDescriptions = new Lazy<IReadOnlyDictionary<AdminOptions,string>>(
-            () =>
-            {
-                return Enum.GetValues(typeof(AdminOptions)).Cast<AdminOptions>().ToDictionary(k => k,
-                    v => v.GetAttributeValue<DescriptionAttribute, string>(x => x.Description));
-            }, LazyThreadSafetyMode.PublicationOnly);
-        
+
         public async Task StartAsync(IDialogContext context)
         {
             await context.PostAsync("Welcome, what you want to do?");
-            PromptDialog.Choice(context, HandleMainDialogAsync, AdminOptionsDescriptions.Value.Keys, "Choice action", descriptions: AdminOptionsDescriptions.Value.Values);
+            PromptDialog.Choice(context, HandleMainDialogAsync, AdminOptionsDescriptions().Keys, "Choice action", descriptions: AdminOptionsDescriptions().Values);
         }
 
         private async Task HandleMainDialogAsync(IDialogContext context, IAwaitable<AdminOptions> option)
@@ -65,7 +59,7 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task UnblockUserAsync(IDialogContext context)
         {
-            var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
 
             PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
@@ -79,7 +73,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                     else
                     {
                         user.Block = false;
-                        await _usersDal.InsertUserAsync(user);
+                        await UsersDal.InsertUserAsync(user);
                         await context.PostAsync("Selected user unblocked");
                         context.Reset();
                     }
@@ -105,7 +99,7 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task RemoveAdminAsync(IDialogContext context)
         {
-            var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin);
 
             PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
@@ -119,7 +113,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                     else
                     {
                         user.Role = Role.User;
-                        await _usersDal.InsertUserAsync(user);
+                        await UsersDal.InsertUserAsync(user);
                         await context.PostAsync("Selected user not admin");
                         context.Reset();
                     }
@@ -130,7 +124,7 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task BlockUserAsync(IDialogContext context)
         {
-            var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
 
             PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
@@ -144,7 +138,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                     else
                     {
                         user.Block = true;
-                        await _usersDal.InsertUserAsync(user);
+                        await UsersDal.InsertUserAsync(user);
                         await context.PostAsync("Selected user blocked");
                         context.Reset();
                     }
@@ -155,7 +149,7 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task AddAdminAsync(IDialogContext context)
         {
-            var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
 
             PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
@@ -169,7 +163,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                     else
                     {
                         user.Role = Role.Admin;
-                        await _usersDal.InsertUserAsync(user);
+                        await UsersDal.InsertUserAsync(user);
                         await context.PostAsync("Selected user is admin");
                         context.Reset();
                     }
@@ -180,7 +174,7 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task SendMessagesForAllNotBlockedUsersAsync(string text)
         {
-            var users = await _usersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
             
             foreach (var user in users)
             {
