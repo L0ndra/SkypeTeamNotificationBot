@@ -7,11 +7,13 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder" Version="3.13.0.3" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder.Autofac" Version="3.13.0.3" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder.Calling" Version="3.13.0.3" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder.FormFlow.Json" Version="3.13.0.3" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder.History" Version="3.13.0.3" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Connector" Version="3.13.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
-    <PackageReference Include="Microsoft.Bot.Builder" Version="3.14.0" />
-    <PackageReference Include="Microsoft.Bot.Builder.Azure" Version="3.2.5" />
-    <PackageReference Include="Microsoft.Bot.Connector" Version="3.14.0" />
-    <PackageReference Include="Microsoft.Bot.Connector.AspNetCore" Version="2.0.1.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
   </ItemGroup>

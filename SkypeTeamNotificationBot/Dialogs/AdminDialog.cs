@@ -52,7 +52,6 @@ namespace SkypeTeamNotificationBot.Dialogs
                     break;
                 default:
                     await context.PostAsync("Unknown command, please try again");
-                    context.Reset();
                     break;
             }
         }
@@ -149,12 +148,12 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task AddAdminAsync(IDialogContext context)
         {
-            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
+            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role != Role.Admin);
 
             PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
                 {
                     var id = await userId;
-                    var user = users.FirstOrDefault(x => x.Id == id);
+                    var user = await UsersDal.GetUserByIdAsync(id);
                     if (user == null)
                     {
                         await context.PostAsync("Selected user not found");
