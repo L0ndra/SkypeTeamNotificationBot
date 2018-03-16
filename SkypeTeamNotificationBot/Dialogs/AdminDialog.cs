@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
-using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
-using MongoDB.Bson;
 using Newtonsoft.Json;
-using Remotion.Linq.Parsing.Structure.IntermediateModel;
 using SkypeTeamNotificationBot.DataAccess;
 using SkypeTeamNotificationBot.DataModels;
 using SkypeTeamNotificationBot.Utils;
@@ -58,117 +54,131 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task UnblockUserAsync(IDialogContext context)
         {
-            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block);
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block)).ToList();
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
-                {
-                    var id = await userId;
-                    var user = users.FirstOrDefault(x => x.Id == id);
-                    if (user == null)
-                    {
-                        await context.PostAsync("Selected user not found");
-                        await StartAsync(context);
-                    }
-                    else
-                    {
-                        user.Block = false;
-                        await UsersDal.InsertUserAsync(user);
-                        await context.PostAsync("Selected user unblocked");
-                        context.Reset();
-                    }
-                    
-                }, users.Select(x => x.Id),
+            PromptDialog.Choice(context, UnblockUserCallbackAsync, users.Select(x => x.Id),
                 "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+        }
+
+        private async Task UnblockUserCallbackAsync(IDialogContext context, IAwaitable<string> userId)
+        {
+            var id = await userId;
+            var user = await UsersDal.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                await context.PostAsync("Selected user not found");
+                await StartAsync(context);
+            }
+            else
+            {
+                user.Block = false;
+                await UsersDal.UpdateUserAsync(user);
+                await context.PostAsync("Selected user unblocked");
+                context.Reset();
+            }
         }
 
         private async Task SendMessageAsync(IDialogContext context)
         {
-            PromptDialog.Text(context, async (dialogContext, result) =>
+            PromptDialog.Text(context, CheckMessageToSendAsync, "Write text that you want to send");
+        }
+
+        private async Task CheckMessageToSendAsync(IDialogContext context, IAwaitable<string> result)
+        {
+            var text = await result;
+            context.UserData.SetValue("text", text);
+            PromptDialog.Confirm(context, CheckMessageToSendCallbackAsync, $"Are you sure that you want to send '{text}'");
+        }
+
+        private async Task CheckMessageToSendCallbackAsync(IDialogContext context, IAwaitable<bool> result)
+        {
+            if (await result)
             {
-                PromptDialog.Confirm(dialogContext, async (context1, awaitable) =>
-                {
-                    if (await awaitable)
-                    {
-                        await SendMessagesForAllNotBlockedUsersAsync(await result);
-                        await context.PostAsync("Message sent for all users");
-                    }
-                }, $"Are you sure that you want to send '{await result}'");
-            }, "Write text that you want to send");
+                var text = context.UserData.GetValue<string>("text");
+                await SendMessagesForAllNotBlockedUsersAsync(text);
+                await context.PostAsync("Message sent for all users");
+            }
         }
 
         private async Task RemoveAdminAsync(IDialogContext context)
         {
-            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin);
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin)).ToList();
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
-                {
-                    var id = await userId;
-                    var user = users.FirstOrDefault(x => x.Id == id);
-                    if (user == null)
-                    {
-                        await context.PostAsync("Selected user not found");
-                        await StartAsync(context);
-                    }
-                    else
-                    {
-                        user.Role = Role.User;
-                        await UsersDal.InsertUserAsync(user);
-                        await context.PostAsync("Selected user not admin");
-                        context.Reset();
-                    }
-                    
-                }, users.Select(x => x.Id),
+            PromptDialog.Choice(context, RemoveAdminCallbackAsync, users.Select(x => x.Id),
                 "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+        }
+
+        private async Task RemoveAdminCallbackAsync(IDialogContext context, IAwaitable<string> userId)
+        {
+            var id = await userId;
+            var user = await UsersDal.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                await context.PostAsync("Selected user not found");
+                await StartAsync(context);
+            }
+            else
+            {
+                user.Role = Role.User;
+                await UsersDal.UpdateUserAsync(user);
+                await context.PostAsync("Selected user not admin");
+                context.Reset();
+            }
+
         }
 
         private async Task BlockUserAsync(IDialogContext context)
         {
-            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block);
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block)).ToList();
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
-                {
-                    var id = await userId;
-                    var user = users.FirstOrDefault(x => x.Id == id);
-                    if (user == null)
-                    {
-                        await context.PostAsync("Selected user not found");
-                        await StartAsync(context);
-                    }
-                    else
-                    {
-                        user.Block = true;
-                        await UsersDal.InsertUserAsync(user);
-                        await context.PostAsync("Selected user blocked");
-                        context.Reset();
-                    }
-                    
-                }, users.Select(x => x.Id),
+            PromptDialog.Choice(context, BlockUserCallbackAsync, users.Select(x => x.Id),
                 "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+        }
+
+        private async Task BlockUserCallbackAsync(IDialogContext context, IAwaitable<string> userId)
+        {
+            var id = await userId;
+            var user = await UsersDal.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                await context.PostAsync("Selected user not found");
+                await StartAsync(context);
+            }
+            else
+            {
+                user.Block = true;
+                await UsersDal.UpdateUserAsync(user);
+                await context.PostAsync("Selected user blocked");
+                context.Reset();
+            }
+
         }
 
         private async Task AddAdminAsync(IDialogContext context)
         {
-            var users = await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role != Role.Admin);
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role != Role.Admin)).ToList();
 
-            PromptDialog.Choice(context, async (IDialogContext innerContext, IAwaitable<string> userId) =>
-                {
-                    var id = await userId;
-                    var user = await UsersDal.GetUserByIdAsync(id);
-                    if (user == null)
-                    {
-                        await context.PostAsync("Selected user not found");
-                        await StartAsync(context);
-                    }
-                    else
-                    {
-                        user.Role = Role.Admin;
-                        await UsersDal.InsertUserAsync(user);
-                        await context.PostAsync("Selected user is admin");
-                        context.Reset();
-                    }
-                    
-                }, users.Select(x => x.Id),
+            PromptDialog.Choice(context, AddAdminCallbackAsync, users.Select(x => x.Id),
                 "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+        }
+
+        private async Task AddAdminCallbackAsync(IDialogContext context, IAwaitable<string> userId)
+        {
+            var id = await userId;
+            var user = await UsersDal.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                await context.PostAsync("Selected user not found");
+                await StartAsync(context);
+            }
+            else
+            {
+                user.Role = Role.Admin;
+                await UsersDal.UpdateUserAsync(user);
+                await context.PostAsync("Selected user is admin");
+                await StartAsync(context);
+            }
+
         }
 
         private async Task SendMessagesForAllNotBlockedUsersAsync(string text)
