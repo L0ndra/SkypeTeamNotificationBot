@@ -56,6 +56,11 @@ namespace SkypeTeamNotificationBot.DataAccess
             }
         }
 
+        public static async Task UpdateUserAsync(UserModel user)
+        {
+            await _colection.ReplaceOneAsync(x => x.Id == user.Id, user);
+        }
+
         public static async Task<UserModel> GetUserByIdAsync(string id)
         {
             try
