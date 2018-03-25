@@ -56,8 +56,16 @@ namespace SkypeTeamNotificationBot.Dialogs
         {
             var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Block)).ToList();
 
-            PromptDialog.Choice(context, UnblockUserCallbackAsync, users.Select(x => x.Id),
-                "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+            if (users.Count == 0)
+            {
+                await context.PostAsync("Any blocked users found");
+                await StartAsync(context);
+            }
+            else
+            {
+                PromptDialog.Choice(context, UnblockUserCallbackAsync, users.Select(x => x.Id),
+                    "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+            }
         }
 
         private async Task UnblockUserCallbackAsync(IDialogContext context, IAwaitable<string> userId)
@@ -74,7 +82,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                 user.Block = false;
                 await UsersDal.UpdateUserAsync(user);
                 await context.PostAsync("Selected user unblocked");
-                context.Reset();
+                await StartAsync(context);
             }
         }
 
@@ -97,15 +105,23 @@ namespace SkypeTeamNotificationBot.Dialogs
                 var text = context.UserData.GetValue<string>("text");
                 await SendMessagesForAllNotBlockedUsersAsync(text);
                 await context.PostAsync("Message sent for all users");
+                await StartAsync(context);
             }
         }
 
         private async Task RemoveAdminAsync(IDialogContext context)
         {
-            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin)).ToList();
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role == Role.Admin))
+                .Where(x => x.Id != context.Activity.From.Id).ToList();
 
+            if (users.Count == 0)
+            {
+                await context.PostAsync("Any admins to demote");
+                await StartAsync(context);
+            }
+            
             PromptDialog.Choice(context, RemoveAdminCallbackAsync, users.Select(x => x.Id),
-                "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+                "Select admin which you want to demote", descriptions: users.Select(x => x.Name));
         }
 
         private async Task RemoveAdminCallbackAsync(IDialogContext context, IAwaitable<string> userId)
@@ -132,7 +148,7 @@ namespace SkypeTeamNotificationBot.Dialogs
             var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block)).ToList();
 
             PromptDialog.Choice(context, BlockUserCallbackAsync, users.Select(x => x.Id),
-                "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+                "Select user which you want to block", descriptions: users.Select(x => x.Name));
         }
 
         private async Task BlockUserCallbackAsync(IDialogContext context, IAwaitable<string> userId)
@@ -149,7 +165,7 @@ namespace SkypeTeamNotificationBot.Dialogs
                 user.Block = true;
                 await UsersDal.UpdateUserAsync(user);
                 await context.PostAsync("Selected user blocked");
-                context.Reset();
+                await StartAsync(context);
             }
 
         }
@@ -157,9 +173,14 @@ namespace SkypeTeamNotificationBot.Dialogs
         private async Task AddAdminAsync(IDialogContext context)
         {
             var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => x.Role != Role.Admin)).ToList();
+            if (users.Count == 0)
+            {
+                await context.PostAsync("Any user to promote");
+                await StartAsync(context);
+            }
 
             PromptDialog.Choice(context, AddAdminCallbackAsync, users.Select(x => x.Id),
-                "Select user which you want to unblock", descriptions: users.Select(x => x.Name));
+                "Select user which you want to promote", descriptions: users.Select(x => x.Name));
         }
 
         private async Task AddAdminCallbackAsync(IDialogContext context, IAwaitable<string> userId)
