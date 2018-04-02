@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using SkypeTeamNotificationBot.DataAccess;
 using SkypeTeamNotificationBot.DataModels;
@@ -17,10 +18,12 @@ namespace SkypeTeamNotificationBot.Controllers
     public class BotController : Controller
     {
         private readonly IConfigurationRoot _configuration;
+        private ILogger _logger;
 
-        public BotController(IConfigurationRoot configuration)
+        public BotController(IConfigurationRoot configuration, ILogger<BotController> logger)
         {
             this._configuration = configuration;
+            _logger = logger;
         }
        
 

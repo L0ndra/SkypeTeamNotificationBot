@@ -15,5 +15,10 @@ namespace SkypeTeamNotificationBot.Utils
         {
             return _loggerFactory.CreateLogger<T>();
         }
+
+        public static ILogger Logger(string className)
+        {
+            return _loggerFactory.CreateLogger(className);
+        }
     }
 }
