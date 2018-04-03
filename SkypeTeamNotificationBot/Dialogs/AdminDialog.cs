@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SkypeTeamNotificationBot.DataAccess;
 using SkypeTeamNotificationBot.DataModels;
@@ -15,6 +16,13 @@ namespace SkypeTeamNotificationBot.Dialogs
     [Serializable]
     public class AdminDialog : IDialog<object>
     {
+        private ILogger _logger;
+
+        public AdminDialog()
+        {
+            _logger = LoggerProxy.Logger<AdminDialog>();
+        }
+        
         private IDictionary<AdminOptions, string> AdminOptionsDescriptions()
         {
             return Enum.GetValues(typeof(AdminOptions)).Cast<AdminOptions>().ToDictionary(k => k,
