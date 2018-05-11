@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
@@ -16,12 +17,8 @@ namespace SkypeTeamNotificationBot.Dialogs
     [Serializable]
     public class AdminDialog : IDialog<object>
     {
-        private ILogger _logger;
-
-        public AdminDialog()
-        {
-            _logger = LoggerProxy.Logger<AdminDialog>();
-        }
+        [NonSerialized]
+        private static ILogger _logger = LoggerProxy.Logger<AdminDialog>();
         
         private IDictionary<AdminOptions, string> AdminOptionsDescriptions()
         {
@@ -153,7 +150,8 @@ namespace SkypeTeamNotificationBot.Dialogs
 
         private async Task BlockUserAsync(IDialogContext context)
         {
-            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block)).ToList();
+            var users = (await UsersDal.GetUsersWithSpecificConditionAsync(x => !x.Block))
+                .Where(x => x.Id != context.Activity.From.Id).ToList();
 
             PromptDialog.Choice(context, BlockUserCallbackAsync, users.Select(x => x.Id),
                 "Select user which you want to block", descriptions: users.Select(x => x.Name));
