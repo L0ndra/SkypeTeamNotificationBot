@@ -75,6 +75,8 @@ namespace SkypeTeamNotificationBot
             
             UsersDal.Initialize(Configuration["Mongodb"]);
 
+            app.UseDefaultFiles();
+            
             app.UseStaticFiles();
 
             app.UseAuthentication();
