@@ -16,6 +16,7 @@ namespace SkypeTeamNotificationBot
         public static void Main(string[] args)
         {
             var webHost = new WebHostBuilder()
+                .UseUrls("http://0.0.0.0:5000")
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
