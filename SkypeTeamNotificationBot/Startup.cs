@@ -74,6 +74,11 @@ namespace SkypeTeamNotificationBot
             LoggerProxy.Init(loggerFactory);
             
             UsersDal.Initialize(Configuration["Mongodb"]);
+            
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
 
             app.UseDefaultFiles();
             
